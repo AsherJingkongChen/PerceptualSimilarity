@@ -5,7 +5,9 @@ from torchvision import models as tv
 class squeezenet(torch.nn.Module):
     def __init__(self, requires_grad=False, pretrained=True):
         super(squeezenet, self).__init__()
-        pretrained_features = tv.squeezenet1_1(pretrained=pretrained).features
+        pretrained_features = tv.squeezenet1_1(
+            weights=tv.SqueezeNet1_1_Weights.DEFAULT if pretrained else None,
+        ).features
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()
         self.slice3 = torch.nn.Sequential()
@@ -56,7 +58,9 @@ class squeezenet(torch.nn.Module):
 class alexnet(torch.nn.Module):
     def __init__(self, requires_grad=False, pretrained=True):
         super(alexnet, self).__init__()
-        alexnet_pretrained_features = tv.alexnet(pretrained=pretrained).features
+        alexnet_pretrained_features = tv.alexnet(
+            weights=tv.AlexNet_Weights.DEFAULT if pretrained else None,
+        ).features
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()
         self.slice3 = torch.nn.Sequential()
@@ -96,7 +100,9 @@ class alexnet(torch.nn.Module):
 class vgg16(torch.nn.Module):
     def __init__(self, requires_grad=False, pretrained=True):
         super(vgg16, self).__init__()
-        vgg_pretrained_features = tv.vgg16(pretrained=pretrained).features
+        vgg_pretrained_features = tv.vgg16(
+            weights=tv.VGG16_Weights.DEFAULT if pretrained else None,
+        ).features
         self.slice1 = torch.nn.Sequential()
         self.slice2 = torch.nn.Sequential()
         self.slice3 = torch.nn.Sequential()
