@@ -5,14 +5,14 @@ from __future__ import print_function
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 # from torch.autograd import Variable
 
 from lpips.trainer import *
 from lpips.lpips import *
 
 def normalize_tensor(in_feat,eps=1e-10):
-    norm_factor = torch.sqrt(torch.sum(in_feat**2,dim=1,keepdim=True))
-    return in_feat/(norm_factor+eps)
+    return F.normalize(in_feat, p=2, dim=1, eps=eps)
 
 def l2(p0, p1, range=255.):
     return .5*np.mean((p0 / range - p1 / range)**2)
