@@ -3,11 +3,9 @@ from __future__ import absolute_import
 
 import torch
 import torch.nn as nn
-import torch.nn.init as init
 from torch.autograd import Variable
-import numpy as np
+from torch.utils.checkpoint import checkpoint
 from . import pretrained_networks as pn
-import torch.nn
 
 import lpips
 
@@ -115,33 +113,38 @@ class LPIPS(nn.Module):
             in1 = 2 * in1  - 1
 
         # v0.0 - original release had a bug, where input was not scaled
-        in0_input, in1_input = (self.scaling_layer(in0), self.scaling_layer(in1)) if self.version=='0.1' else (in0, in1)
-        outs0, outs1 = self.net.forward(in0_input), self.net.forward(in1_input)
-        feats0, feats1, diffs = {}, {}, {}
-
-        for kk in range(self.L):
-            feats0[kk], feats1[kk] = lpips.normalize_tensor(outs0[kk]), lpips.normalize_tensor(outs1[kk])
-            diffs[kk] = (feats0[kk]-feats1[kk])**2
-
-        if(self.lpips):
-            if(self.spatial):
-                res = [upsample(self.lins[kk](diffs[kk]), out_HW=in0.shape[2:]) for kk in range(self.L)]
-            else:
-                res = [spatial_average(self.lins[kk](diffs[kk]), keepdim=True) for kk in range(self.L)]
-        else:
-            if(self.spatial):
-                res = [upsample(diffs[kk].sum(dim=1,keepdim=True), out_HW=in0.shape[2:]) for kk in range(self.L)]
-            else:
-                res = [spatial_average(diffs[kk].sum(dim=1,keepdim=True), keepdim=True) for kk in range(self.L)]
+        in0_input, in1_input = (
+            (self.scaling_layer(in0), self.scaling_layer(in1))
+            if self.version=='0.1'
+            else (in0, in1)
+        )
+        outs0 = checkpoint(self.net, in0_input, use_reentrant=False)
+        outs1 = checkpoint(self.net, in1_input, use_reentrant=False)
 
         val = 0
-        for l in range(self.L):
-            val += res[l]
-        
-        if(retPerLayer):
-            return (val, res)
+        res = [] if retPerLayer else None
+        for kk in range(self.L):
+            r = checkpoint(self._run_layer, self.lins[kk], outs0[kk], outs1[kk], in0.shape[2:], use_reentrant=False)
+            val = val + r
+            if retPerLayer:
+                res.append(r)
+
+        return (val, res) if retPerLayer else val
+
+    def _run_layer(self, lin, out0, out1, out_HW):
+        f0 = lpips.normalize_tensor(out0)
+        f1 = lpips.normalize_tensor(out1)
+        diff = (f0 - f1) ** 2
+        if self.lpips:
+            if self.spatial:
+                return upsample(lin(diff), out_HW=out_HW)
+            else:
+                return spatial_average(lin(diff), keepdim=True)
         else:
-            return val
+            if self.spatial:
+                return upsample(diff.sum(dim=1, keepdim=True), out_HW=out_HW)
+            else:
+                return spatial_average(diff.sum(dim=1, keepdim=True), keepdim=True)
 
 
 class ScalingLayer(nn.Module):
@@ -188,7 +191,7 @@ class BCERankingLoss(nn.Module):
         super(BCERankingLoss, self).__init__()
         self.net = Dist2LogitLayer(chn_mid=chn_mid)
         # self.parameters = list(self.net.parameters())
-        self.loss = torch.nn.BCELoss()
+        self.loss = nn.BCELoss()
 
     def forward(self, d0, d1, judge):
         per = (judge+1.)/2.
