@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from collections import OrderedDict
 from torch.autograd import Variable
-from scipy.ndimage import zoom
+import torch.nn.functional as F
 from tqdm import tqdm
 import lpips
 import os
@@ -152,19 +152,14 @@ class Trainer():
         return retDict
 
     def get_current_visuals(self):
-        zoom_factor = 256/self.var_ref.data.size()[2]
+        # Blown up to 256 px for display, nearest neighbour.
+        def vis(t):
+            size = round(t.size(2) * 256 / self.var_ref.data.size(2))
+            return lpips.tensor2im(F.interpolate(t.data, size=(size, size), mode='nearest-exact'))
 
-        ref_img = lpips.tensor2im(self.var_ref.data)
-        p0_img = lpips.tensor2im(self.var_p0.data)
-        p1_img = lpips.tensor2im(self.var_p1.data)
-
-        ref_img_vis = zoom(ref_img,[zoom_factor, zoom_factor, 1],order=0)
-        p0_img_vis = zoom(p0_img,[zoom_factor, zoom_factor, 1],order=0)
-        p1_img_vis = zoom(p1_img,[zoom_factor, zoom_factor, 1],order=0)
-
-        return OrderedDict([('ref', ref_img_vis),
-                            ('p0', p0_img_vis),
-                            ('p1', p1_img_vis)])
+        return OrderedDict([('ref', vis(self.var_ref)),
+                            ('p0', vis(self.var_p0)),
+                            ('p1', vis(self.var_p1))])
 
     def save(self, path, label):
         if(self.use_gpu):
