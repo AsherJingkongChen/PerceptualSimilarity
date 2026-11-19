@@ -36,14 +36,15 @@ def main(argv: list[str] | None = None) -> int:
         prog="lpips",
         description="Compares the first image against each of the others and prints "
         "their LPIPS distances (0 = identical).",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument("original")
     p.add_argument("modified", nargs="+")
-    p.add_argument("-n", "--net", choices=["alex", "vgg", "squeeze"], default="alex",
-                   help="the trunk network (default: alex)")
+    p.add_argument("-n", "--net", choices=["alex", "vgg", "squeeze"], default="vgg",
+                   help="the trunk network")
     p.add_argument("-d", "--device", type=device,
                    default=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
-                   help="a torch device, such as cpu or cuda:0 (default: %(default)s)")
+                   help="a torch device, such as cpu or cuda:0")
     p.add_argument("-o", "--output", metavar="difference.png",
                    help="write the per-pixel distance as a grayscale PNG, 1.0 and above "
                    "white; only with one modified image")
