@@ -65,18 +65,21 @@ def tensorlab2tensor(lab_tensor,return_inbnd=False):
         return im2tensor(rgb_back)
 
 def load_image(path):
-    if(path[-3:] == 'dng'):
-        import rawpy
-        with rawpy.imread(path) as raw:
-            img = raw.postprocess()
-    elif(path[-3:]=='bmp' or path[-3:]=='jpg' or path[-3:]=='png' or path[-4:]=='jpeg'):
-        import cv2
-        return cv2.imread(path)[:,:,::-1]
-    else:
-        import matplotlib.pyplot as plt        
-        img = (255*plt.imread(path)[:,:,:3]).astype('uint8')
-
-    return img
+    """An image as an H×W×3 uint8 RGB array. DNG goes through rawpy (the dng extra),
+    everything else through Pillow; 16-bit images keep their top 8 bits."""
+    if str(path).lower().endswith('.dng'):
+        try:
+            import rawpy
+        except ImportError:
+            raise ImportError('reading DNG needs rawpy: install lpips[dng]') from None
+        with rawpy.imread(str(path)) as raw:
+            return raw.postprocess()
+    from PIL import Image
+    with Image.open(path) as img:
+        if img.mode.startswith('I;16'):
+            gray = (np.asarray(img, dtype=np.uint16) >> 8).astype(np.uint8)
+            return np.repeat(gray[:, :, None], 3, axis=2)
+        return np.asarray(img.convert('RGB'))
 
 def tensor2im(image_tensor, imtype=np.uint8, cent=1., factor=255./2.):
     image_numpy = image_tensor[0].cpu().float().numpy()
