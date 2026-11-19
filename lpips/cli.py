@@ -41,7 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("modified", nargs="+")
     p.add_argument("-n", "--net", choices=["alex", "vgg", "squeeze"], default="alex",
                    help="the trunk network (default: alex)")
-    p.add_argument("-d", "--device", type=device, default=torch.get_default_device(),
+    p.add_argument("-d", "--device", type=device,
+                   default=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
                    help="a torch device, such as cpu or cuda:0 (default: %(default)s)")
     p.add_argument("-o", "--output", metavar="difference.png",
                    help="write the per-pixel distance as a grayscale PNG, 1.0 and above "
