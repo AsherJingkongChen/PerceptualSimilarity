@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lpips"
-version = "0.1.4"
+version = "0.2.0"
 description = "LPIPS Similarity metric"
 readme = "README.md"
 license = "BSD-2-Clause"
