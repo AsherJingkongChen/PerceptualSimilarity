@@ -23,6 +23,14 @@ def read(path: str, device: torch.device) -> torch.Tensor:
     return (img.to(device, torch.float32) / 127.5 - 1.0)[None]
 
 
+def device(name: str) -> torch.device:
+    """A torch device by name, or a usage error argparse can report."""
+    try:
+        return torch.device(name)
+    except RuntimeError as e:
+        raise argparse.ArgumentTypeError(str(e)) from None
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="lpips",
@@ -33,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("modified", nargs="+")
     p.add_argument("-n", "--net", choices=["alex", "vgg", "squeeze"], default="alex",
                    help="the trunk network (default: alex)")
-    p.add_argument("-d", "--device", type=torch.device, default=torch.get_default_device(),
+    p.add_argument("-d", "--device", type=device, default=torch.get_default_device(),
                    help="a torch device, such as cpu or cuda:0 (default: %(default)s)")
     p.add_argument("-o", "--output", metavar="difference.png",
                    help="write the per-pixel distance as a grayscale PNG, 1.0 and above "
