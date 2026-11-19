@@ -17,7 +17,7 @@ from torchvision.io import ImageReadMode, decode_image, read_file, write_png
 import lpips
 
 
-def read(path: str, device: str) -> torch.Tensor:
+def read(path: str, device: torch.device) -> torch.Tensor:
     """An image as a 1×3×H×W tensor in [-1, 1]."""
     img = decode_image(read_file(path), mode=ImageReadMode.RGB)
     return (img.to(device, torch.float32) / 127.5 - 1.0)[None]
@@ -33,7 +33,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("modified", nargs="+")
     p.add_argument("-n", "--net", choices=["alex", "vgg", "squeeze"], default="alex",
                    help="the trunk network (default: alex)")
-    p.add_argument("-d", "--device", default="cpu", help="a torch device (default: cpu)")
+    p.add_argument("-d", "--device", type=torch.device, default=torch.get_default_device(),
+                   help="a torch device, such as cpu or cuda:0 (default: %(default)s)")
     p.add_argument("-o", "--output", metavar="difference.png",
                    help="write the per-pixel distance as a grayscale PNG, 1.0 and above "
                    "white; only with one modified image")
