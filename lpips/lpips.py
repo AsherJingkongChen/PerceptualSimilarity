@@ -102,10 +102,22 @@ class LPIPS(nn.Module):
 
                 if(verbose):
                     print('Loading model from: %s'%model_path)
-                self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)          
+                self.load_lins(torch.load(model_path, map_location='cpu', weights_only=True))
 
         if(eval_mode):
             self.eval()
+
+    def load_lins(self, state_dict):
+        """Loads the linear layers, and only them, from a weight file such as weights/v0.1/alex.pth.
+        Strict on both sides: every linear layer must find its weights, every key in the file must be used."""
+        unused = set(state_dict)
+        for kk, lin in enumerate(self.lins):
+            prefix = 'lin%d.' % kk
+            own = {k: v for k, v in state_dict.items() if k.startswith(prefix)}
+            lin.load_state_dict({k[len(prefix):]: v for k, v in own.items()}, strict=True)
+            unused -= set(own)
+        if unused:
+            raise RuntimeError('Keys in the LPIPS weights that no linear layer takes: %s' % sorted(unused))
 
     def forward(self, in0, in1, retPerLayer=False, normalize=False):
         if normalize: # turn on this flag if input is [0,1] so it can be adjusted to [-1, +1]
@@ -162,8 +174,10 @@ class NetLinLayer(nn.Module):
     def __init__(self, chn_in, chn_out=1, use_dropout=False):
         super(NetLinLayer, self).__init__()
 
-        layers = [nn.Dropout(),] if(use_dropout) else []
-        layers += [nn.Conv2d(chn_in, chn_out, 1, stride=1, padding=0, bias=False),]
+        # The Dropout stays when it is off (p=0), so that the conv is always model.1,
+        # the name the weight files use.
+        layers = [nn.Dropout(p=0.5 if use_dropout else 0.0),
+                  nn.Conv2d(chn_in, chn_out, 1, stride=1, padding=0, bias=False),]
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):
