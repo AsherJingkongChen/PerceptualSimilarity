@@ -26,6 +26,9 @@ classifiers = [
 [project.optional-dependencies]
 dng = ["rawpy"]
 
+[project.scripts]
+lpips = "lpips.cli:main"
+
 [project.urls]
 Repository = "https://github.com/AsherJingkongChen/PerceptualSimilarity"
 
