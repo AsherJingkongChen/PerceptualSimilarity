@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lpips"
+version = "0.1.4"
+description = "LPIPS Similarity metric"
+readme = "README.md"
+license = "BSD-2-Clause"
+license-files = ["LICENSE"]
+authors = [{ name = "Richard Zhang", email = "rizhang@adobe.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.14.3",
+    "pillow",
+    "torch>=1.13",
+    "torchvision>=0.14",
+    "tqdm>=4.28.1",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+dng = ["rawpy"]
+
+[project.urls]
+Repository = "https://github.com/AsherJingkongChen/PerceptualSimilarity"
+
+[tool.setuptools]
+packages = ["lpips"]
+
+[tool.setuptools.package-data]
+lpips = ["weights/v0.0/*.pth", "weights/v0.1/*.pth"]
