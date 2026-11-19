@@ -8,7 +8,33 @@
 
 ### Quick start
 
-Run `pip install lpips`. The following Python code is all you need.
+#### The `lpips` command
+
+Install it, from this repository, with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install git+https://github.com/AsherJingkongChen/PerceptualSimilarity
+```
+
+The newest torch may need a newer NVIDIA driver than yours. Pin the version your driver runs; torch 2.10 from PyPI, for example, is built for CUDA 12.8:
+
+```bash
+uv tool install git+https://github.com/AsherJingkongChen/PerceptualSimilarity \
+  --with 'torch>=2.10,<2.11' --with 'torchvision>=0.25,<0.26'
+```
+
+It compares the first image against each of the others, the way [dssim](https://github.com/kornelski/dssim) does:
+
+```
+lpips original.png modified.png [modified.png...]
+lpips -o difference.png original.png modified.png
+```
+
+Each modified image gets one line: its distance to the original (0 = identical), a tab, its path. `-o` writes the per-pixel distance as a grayscale PNG, 1.0 and above white. `-n` picks the trunk (`vgg`, the default, as papers report LPIPS; `alex`; `squeeze`), `-d` the torch device (`cuda` when it is available, else `cpu`). The first run downloads the trunk's ImageNet weights into `~/.cache/torch` (553 MB for vgg, 244 MB for alex). Most of a run is starting torch, so compare many images in one call.
+
+#### The Python package
+
+Install it with `pip install git+https://github.com/AsherJingkongChen/PerceptualSimilarity`, or `pip install "lpips[dng] @ git+https://github.com/AsherJingkongChen/PerceptualSimilarity"` to read DNG too. The following Python code is all you need.
 
 ```python
 import lpips
