@@ -30,7 +30,7 @@ lpips original.png modified.png [modified.png...]
 lpips -o difference.png original.png modified.png
 ```
 
-Each modified image gets one line: its distance to the original (0 = identical), a tab, its path. `-o` writes the per-pixel distance as a grayscale PNG, 1.0 and above white. `-n` picks the trunk (`vgg`, the default, as papers report LPIPS; `alex`; `squeeze`), `-d` the torch device (`cuda` when it is available, else `cpu`). The first run downloads the trunk's ImageNet weights into `~/.cache/torch` (553 MB for vgg, 244 MB for alex). Most of a run is starting torch, so compare many images in one call.
+Each modified image gets one line: its distance to the original (0 = identical), a tab, its path. `-o` writes the per-pixel distance as a heatmap PNG in matplotlib's turbo, blue for 0 and red for 1.0 and above. `-n` picks the trunk (`vgg`, the default, as papers report LPIPS; `alex`; `squeeze`), `-d` the torch device (`cuda` when it is available, else `cpu`). The first run downloads the trunk's ImageNet weights into `~/.cache/torch` (553 MB for vgg, 244 MB for alex). Most of a run is starting torch, so compare many images in one call.
 
 #### The Python package
 

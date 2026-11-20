@@ -12,6 +12,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "Richard Zhang", email = "rizhang@adobe.com" }]
 requires-python = ">=3.10"
 dependencies = [
+    "matplotlib>=3.5",
     "numpy>=1.14.3",
     "pillow",
     "torch>=1.13",
