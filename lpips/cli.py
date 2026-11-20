@@ -11,7 +11,9 @@ is dropped. Images are read as 8-bit sRGB, the way LPIPS was calibrated.
 import argparse
 import sys
 
+import numpy as np
 import torch
+from matplotlib import colormaps
 from PIL import Image
 
 import lpips
@@ -45,8 +47,8 @@ def main(argv: list[str] | None = None) -> int:
                    default=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
                    help="a torch device, such as cpu or cuda:0")
     p.add_argument("-o", "--output", metavar="difference.png",
-                   help="write the per-pixel distance as a PNG from blue for 0 to red for "
-                   "1.0 and above; only with one modified image")
+                   help="write the per-pixel distance as a PNG in matplotlib's turbo, blue "
+                   "for 0 to red for 1.0 and above; only with one modified image")
     a = p.parse_args(argv)
     if a.output and len(a.modified) != 1:
         p.error("-o takes exactly one modified image")
@@ -65,9 +67,9 @@ def main(argv: list[str] | None = None) -> int:
                 metric.spatial = True  # the same layers, upsampled instead of averaged
                 d = metric(x, y)[0, 0].clamp(0, 1)
                 metric.spatial = False
-                # blue for 0, red for 1 and above, straight between: a heatmap as depth is drawn
-                heat = torch.stack([d, torch.zeros_like(d), 1 - d], dim=-1)
-                Image.fromarray((heat * 255).round().to(torch.uint8).cpu().numpy()).save(a.output)
+                # turbo, as depth is drawn: blue for 0, red for 1 and above
+                heat = colormaps["turbo"](d.cpu().numpy())[..., :3]
+                Image.fromarray((heat * 255).round().astype(np.uint8)).save(a.output)
     return 0
 
 
