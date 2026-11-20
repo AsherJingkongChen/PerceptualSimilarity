@@ -15,6 +15,11 @@ use burn::tensor::{
 };
 use safetensors::SafeTensors;
 
+/// The network burn-onnx grew out of model/lpips_alex.onnx at build time.
+mod lpips_alex {
+    include!(concat!(env!("OUT_DIR"), "/model/lpips_alex.rs"));
+}
+
 /// One convolution of AlexNet's features: its weights, stride and padding, and whether a 3 x 3 max pool with
 /// stride 2 comes before it.
 struct Conv {
@@ -123,7 +128,9 @@ fn run(args: &[String]) -> Result<(), String> {
         return Err("give at least one modified image".into());
     }
     let device = Device::default();
-    let net = Lpips::load(weights, &device)?;
+    // "onnx" in place of the weights runs the network burn-onnx grew; a path runs the one written by hand
+    let net = if weights == "onnx" { None } else { Some(Lpips::load(weights, &device)?) };
+    let grown = lpips_alex::Model::default();
     let x = read(original, &device)?;
     for path in modified {
         let y = read(path, &device)?;
@@ -131,7 +138,10 @@ fn run(args: &[String]) -> Result<(), String> {
             return Err(format!("{path} is {:?}, {original} is {:?}", y.dims(), x.dims()));
         }
         let t0 = Instant::now();
-        let d: f32 = net.distance(x.clone(), y).into_scalar();
+        let d: f32 = match &net {
+            Some(net) => net.distance(x.clone(), y).into_scalar(),
+            None => grown.forward(x.clone(), y).into_scalar(),
+        };
         eprintln!("{} ms", t0.elapsed().as_millis());
         println!("{d:.10}\t{path}");
     }
