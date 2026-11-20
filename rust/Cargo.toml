@@ -1,0 +1,12 @@
+[package]
+name = "lpips"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-2-Clause"
+description = "LPIPS, the learned perceptual image patch similarity, in Rust on Burn"
+publish = false
+
+[dependencies]
+burn = { version = "0.22.1", default-features = false, features = ["std", "ndarray"] }
+image = "0.25.10"
+safetensors = "0.8.0"
