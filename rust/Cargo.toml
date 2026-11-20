@@ -7,6 +7,6 @@ description = "LPIPS, the learned perceptual image patch similarity, in Rust on 
 publish = false
 
 [dependencies]
-burn = { version = "0.22.1", default-features = false, features = ["std", "ndarray"] }
+burn = { version = "0.22.1", default-features = false, features = ["std", "ndarray", "flex"] }
 image = "0.25.10"
 safetensors = "0.8.0"
